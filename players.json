@@ -646,5 +646,23 @@
       "salary": 4500000,
       "contract": 1
     }
+    "id": "p035",
+      "name": "Nguyễn Tiến Linh",
+      "teamId": "CA TPHCM",
+      "position": "ST",
+      "number": 11,
+      "age": 36,
+      "ovr": 68,
+      "pace": 62,
+      "shooting": 72,
+      "passing": 50,
+      "dribbling": 76,
+      "defense": 32,
+      "physical": 85,
+      "workRate": "H/M",
+      "nationality": "Vietnam",
+      "salary": 4500000,
+      "contract": 1
+    }
   ]
 }
