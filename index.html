@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Football Association - Football Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Intro Screen */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        #intro-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-text {
+            font-size: 28px;
+            text-align: center;
+            padding: 40px;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+            max-width: 800px;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Team Selection Screen */
+        #team-selection {
+            display: none;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        #team-selection.active {
+            display: block;
+        }
+
+        .selection-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .selection-header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .team-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            border-color: #4CAF50;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .team-card h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .team-card .league {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .team-card .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .team-card .stat-item {
+            font-size: 14px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+
+        /* Main Game Screen */
+        #game-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #game-screen.active {
+            display: block;
+        }
+
+        .game-header {
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .team-info h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .team-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .stat-box .label {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .stat-box .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .nav-tab.active {
+            background: #4CAF50;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Squad Table */
+        .squad-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .squad-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .squad-table th {
+            background: rgba(76, 175, 80, 0.3);
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .squad-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .squad-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .position-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pos-GK { background: #FF9800; }
+        .pos-DEF { background: #2196F3; }
+        .pos-MID { background: #4CAF50; }
+        .pos-ATT { background: #F44336; }
+
+        .stat-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-bar-fill {
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .stat-value {
+            min-width: 30px;
+            font-weight: bold;
+        }
+
+        /* Formation Display */
+        .formation-field {
+            background: linear-gradient(to bottom, #2d5016 0%, #2d5016 50%, #3a6b1f 50%, #3a6b1f 100%);
+            background-size: 100% 40px;
+            border: 3px solid white;
+            border-radius: 10px;
+            height: 600px;
+            position: relative;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .player-dot {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #4CAF50;
+            border: 3px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .player-dot:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        /* Transfer Market */
+        .market-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .market-filters select,
+        .market-filters input {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .market-filters select option {
+            background: #1e3c72;
+        }
+
+        .player-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .player-card:hover {
+            border-color: #4CAF50;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .player-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        /* Match Simulator */
+        .match-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .match-header {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .match-score {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .match-events {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .match-event {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .match-event.goal {
+            border-left-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .squad-table {
+                font-size: 12px;
+            }
+
+            .formation-field {
+                height: 400px;
+            }
+
+            .player-dot {
+                width: 40px;
+                height: 40px;
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro Screen -->
+    <div id="intro-screen">
+        <div class="intro-text" id="intro-text"></div>
+    </div>
+
+    <!-- Team Selection Screen -->
+    <div id="team-selection">
+        <div class="selection-header">
+            <h1>CHỌN ĐỘI BÓNG CỦA BẠN</h1>
+            <p>Lựa chọn một đội bóng tân binh để bắt đầu hành trình chinh phục</p>
+        </div>
+        <div class="teams-grid" id="teams-grid">
+            <div class="loading">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <!-- Main Game Screen -->
+    <div id="game-screen">
+        <div class="game-header">
+            <div class="team-info">
+                <h1 id="current-team-name"></h1>
+                <p id="current-league"></p>
+            </div>
+            <div class="team-stats">
+                <div class="stat-box">
+                    <div class="label">Ngân sách</div>
+                    <div class="value" id="budget">€50M</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Điểm</div>
+                    <div class="value" id="points">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Xếp hạng</div>
+                    <div class="value" id="ranking">20</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('squad')">Đội hình</button>
+            <button class="nav-tab" onclick="switchTab('tactics')">Chiến thuật</button>
+            <button class="nav-tab" onclick="switchTab('transfer')">Chuyển nhượng</button>
+            <button class="nav-tab" onclick="switchTab('match')">Thi đấu</button>
+            <button class="nav-tab" onclick="switchTab('league')">Bảng xếp hạng</button>
+        </div>
+
+        <!-- Squad Tab -->
+        <div id="tab-squad" class="tab-content active">
+            <div class="squad-container">
+                <h2 style="margin-bottom: 20px;">Đội hình hiện tại</h2>
+                <table class="squad-table" id="squad-table">
+                    <thead>
+                        <tr>
+                            <th>Tên</th>
+                            <th>Vị trí</th>
+                            <th>Tuổi</th>
+                            <th>Quốc tịch</th>
+                            <th>Tổng quan</th>
+                            <th>Pace</th>
+                            <th>Shot</th>
+                            <th>Pass</th>
+                            <th>Physical</th>
+                            <th>Defend</th>
+                            <th>GK</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="squad-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tactics Tab -->
+        <div id="tab-tactics" class="tab-content">
+            <h2 style="margin-bottom: 20px;">Sơ đồ chiến thuật</h2>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <select id="formation-select" onchange="changeFormation()" style="padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; background: rgba(255,255,255,0.1); color: white;">
+                    <option value="442">4-4-2</option>
+                    <option value="433">4-3-3</option>
+                    <option value="352">3-5-2</option>
+                    <option value="4231">4-2-3-1</option>
+                </select>
+            </div>
+            <div class="formation-field" id="formation-field"></div>
+        </div>
+
+        <!-- Transfer Tab -->
+        <div id="tab-transfer" class="tab-content">
+            <h2 style="margin-bottom: 20px;">Thị trường chuyển nhượng</h2>
+            <div class="market-filters">
+                <select id="filter-league" onchange="filterTransferMarket()">
+                    <option value="">Tất cả giải đấu</option>
+                    <option value="Premier League">Premier League</option>
+                    <option value="La Liga">La Liga</option>
+                    <option value="Serie A">Serie A</option>
+                    <option value="Bundesliga">Bundesliga</option>
+                    <option value="Ligue 1">Ligue 1</option>
+                    <option value="Turkish Super Lig">Turkish Super Lig</option>
+                </select>
+                <select id="filter-position" onchange="filterTransferMarket()">
+                    <option value="">Tất cả vị trí</option>
+                    <option value="GK">Thủ môn</option>
+                    <option value="DEF">Hậu vệ</option>
+                    <option value="MID">Tiền vệ</option>
+                    <option value="ATT">Tiền đạo</option>
+                </select>
+                <input type="text" id="filter-name" placeholder="Tìm kiếm tên cầu thủ..." oninput="filterTransferMarket()">
+            </div>
+            <div id="transfer-market"></div>
+        </div>
+
+        <!-- Match Tab -->
+        <div id="tab-match" class="tab-content">
+            <div class="match-container">
+                <h2 style="margin-bottom: 20px;">Thi đấu</h2>
+                <div class="match-header">
+                    <h3>Trận đấu tiếp theo</h3>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 50px; margin: 30px 0;">
+                        <div style="text-align: center;">
+                            <h2 id="home-team">Đội của bạn</h2>
+                        </div>
+                        <div style="font-size: 48px; font-weight: bold;">VS</div>
+                        <div style="text-align: center;">
+                            <h2 id="away-team">Đối thủ</h2>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="simulateMatch()" style="font-size: 18px; padding: 15px 40px;">Bắt đầu trận đấu</button>
+                </div>
+                <div id="match-result" style="display: none;">
+                    <div class="match-score" id="match-score"></div>
+                    <div class="match-events" id="match-events"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- League Tab -->
+        <div id="tab-league" class="tab-content">
+            <div class="squad-container">
+                <h2 style="margin-bottom: 20px;">Bảng xếp hạng</h2>
+                <table class="squad-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Đội</th>
+                            <th>Trận</th>
+                            <th>Thắng</th>
+                            <th>Hòa</th>
+                            <th>Thua</th>
+                            <th>Hiệu số</th>
+                            <th>Điểm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="league-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
