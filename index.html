@@ -1415,11 +1415,6 @@ function switchSection(name) {
   else if (name==='transfer') renderTransfer();
   else if (name==='match') renderMatchPrep();
 
-  // Fix lineup layout
-  if (name==='lineup')
-    secEl.classList.add('active');
-    renderPitch(); renderPlayerPool();
-  }
 }
 
 // ══════════ COUPON ══════════
