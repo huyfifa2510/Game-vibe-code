@@ -6,34 +6,162 @@
 <title>VFA – Virtual Football Association</title>
 <style>
 :root{
-  --bg:#070b1a;--panel:rgba(255,255,255,.04);--border:rgba(0,212,255,.25);
+  --bg:#070b1a;--panel:rgba(255,255,255,.06);--border:rgba(0,212,255,.2);
   --cyan:#00d4ff;--cyan2:#00ffff;--gold:#ffd700;--red:#ff4444;--green:#00ff88;
-  --orange:#ff8c00;--purple:#9b59b6;--grey:#a0aec0;
   --font:'Segoe UI',system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:#fff;font-family:var(--font);overflow:hidden;width:100vw;height:100vh;}
 
-/* ════════ INTRO ════════ */
-#intro{position:fixed;inset:0;background:linear-gradient(135deg,#070b1a,#0d1530,#070b1a);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:30px;}
-#intro .logo{font-size:5em;font-weight:900;
-  background:linear-gradient(135deg,#00d4ff,#00ffff,#0099ff);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  text-shadow:none;letter-spacing:10px;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
-#intro .subtitle{color:var(--grey);font-size:1.1em;letter-spacing:4px;text-transform:uppercase;}
-#dialogBox{max-width:700px;text-align:center;font-size:1.25em;color:var(--cyan);
-  line-height:1.8;min-height:80px;padding:0 20px;}
-#teamGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:820px;
-  padding:10px;animation:fadeUp .5s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.team-card{background:var(--panel);border:2px solid var(--border);border-radius:14px;
-  padding:22px 18px;cursor:pointer;text-align:center;transition:.3s;position:relative;overflow:hidden;}
-.team-card:hover{border-color:var(--cyan);transform:translateY(-4px);
-  box-shadow:0 10px 30px rgba(0,212,255,.25);}
-.team-card::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(0,212,255,.08),transparent);opacity:0;transition:.3s;}
+/* ════════ LAYOUT CHÍNH ════════ */
+#game-container { display: none; width: 100%; height: 100%; position: relative; }
+
+/* Các màn hình (Screens) */
+.screen {
+  display: none; /* Ẩn mặc định */
+  position: absolute;
+  top: 60px; /* Chừa chỗ cho Top Bar */
+  left: 0;
+  right: 0;
+  bottom: 70px; /* Chừa chỗ cho Menu Bar */
+  padding: 20px;
+  overflow-y: auto;
+  background: var(--bg);
+}
+.screen.active { display: block; } /* Chỉ hiện màn hình active */
+
+/* Chế độ đặc biệt cho Lineup (Flex) */
+#screen-lineup.active { display: flex; gap: 10px; }
+
+/* ════════ MENU CHÍNH (NEW) ════════ */
+.main-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 70px;
+  background: rgba(13, 21, 48, 0.95);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 2px solid var(--border);
+  backdrop-filter: blur(15px);
+  z-index: 1000;
+}
+.nav-item {
+  background: none; border: none; color: #aaa;
+  font-size: 0.8em; cursor: pointer; transition: 0.3s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.nav-item i { font-size: 1.5em; display: block; }
+.nav-item:hover, .nav-item.active { color: var(--cyan); }
+
+/* Các thành phần khác (Giữ nguyên style của bạn nhưng làm gọn) */
+#top-bar { height: 60px; background: var(--panel); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); }
+.btn-coupon { background: none; border: 1px solid var(--border); color: var(--cyan); padding: 5px 15px; border-radius: 20px; cursor: pointer; }
+
+/* (Giữ lại các CSS cũ về pitch, card, modal của bạn ở đây...) */
+/* ... [Phần CSS Pitch/Player Card giữ nguyên từ file gốc] ... */
+</style>
+</head>
+<body>
+
+<div id="intro">...</div>
+<div id="setup-screen">...</div>
+
+<div id="game-container">
+  <header id="top-bar">
+    <div id="user-info"></div>
+    <button class="btn-coupon" onclick="openCoupon()">🎟️ MÃ QUÀ TẶNG</button>
+  </header>
+
+  <section id="screen-dashboard" class="screen active">
+    <h2>Chào mừng HLV</h2>
+    <div id="dashboard-content"></div>
+  </section>
+
+  <section id="screen-lineup" class="screen">
+    <div id="pitch-container"></div>
+    <div id="player-pool"></div>
+  </section>
+
+  <section id="screen-transfer" class="screen">
+    <div class="market-header">Thị trường chuyển nhượng</div>
+    <div id="transfer-list"></div>
+  </section>
+
+  <section id="screen-tournament" class="screen">
+    <div id="league-table-container"></div>
+  </section>
+
+  <section id="screen-wardrobe" class="screen">
+    <div id="wardrobe-container"></div>
+  </section>
+
+  <nav class="main-nav">
+    <button class="nav-item active" onclick="switchScreen('dashboard', this)"><i>🏠</i>Tổng quan</button>
+    <button class="nav-item" onclick="switchScreen('lineup', this)"><i>📋</i>Đội hình</button>
+    <button class="nav-item" onclick="switchScreen('transfer', this)"><i>💸</i>Thị trường</button>
+    <button class="nav-item" onclick="switchScreen('tournament', this)"><i>🏆</i>Giải đấu</button>
+    <button class="nav-item" onclick="switchScreen('wardrobe', this)"><i>👕</i>Áo đấu</button>
+  </nav>
+</div>
+
+<div id="couponModal" class="modal">...</div>
+
+<script>
+// ════════ LOGIC ĐIỀU HƯỚNG (PHẦN MỚI) ════════
+function switchScreen(screenName, btnElement) {
+  // 1. Ẩn tất cả các screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  
+  // 2. Bỏ active ở tất cả nút menu
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+
+  // 3. Hiển thị screen được chọn
+  const target = document.getElementById('screen-' + screenName);
+  if(target) target.classList.add('active');
+
+  // 4. Active nút menu hiện tại
+  if(btnElement) btnElement.classList.add('active');
+
+  // 5. Gọi hàm render tương ứng (Giữ nguyên logic cũ của bạn)
+  if (screenName === 'lineup') {
+    renderPitch(); 
+    renderPlayerPool();
+  } else if (screenName === 'wardrobe') {
+    renderWardrobe();
+  } else if (screenName === 'tournament') {
+    renderTournament();
+  } else if (screenName === 'transfer') {
+    renderTransfer();
+  }
+}
+
+// ════════ CÁC HÀM CŨ (GIỮ NGUYÊN) ════════
+// Lưu ý: Sửa lại các hàm render cũ của bạn để trỏ đúng vào các ID mới (ví dụ: #transfer-list thay vì #sec)
+
+function openCoupon() { document.getElementById('couponModal').classList.add('open'); }
+
+function redeemCoupon() {
+  const code = document.getElementById('couponInput').value.trim().toUpperCase();
+  const codes = {
+    'VFA2024':  ()=>{ G.budget+=10000000; notify('💰 Nhận được $10M!','success'); },
+    'TOPELEVEN':()=>{ G.budget+=50000000; notify('💰 Nhận được $50M!','success'); },
+    'MASTERLEAGUE':()=>{ G.budget+=100000000; notify('💰 Nhận được $100M!','success'); },
+  };
+  if (codes[code]) {
+    codes[code]();
+    updateInfoPanel();
+    document.getElementById('couponModal').classList.remove('open');
+  } else {
+    notify('Mã không hợp lệ!','error');
+  }
+}
+
+// ... Copy lại toàn bộ logic xử lý dữ liệu, render cầu thủ từ file cũ của bạn vào đây ...
+</script>
+</body>
+</html>
 .team-card:hover::before{opacity:1;}
 .tc-logo{font-size:2.8em;margin-bottom:10px;}
 .tc-name{font-weight:700;font-size:1.1em;margin-bottom:6px;}
