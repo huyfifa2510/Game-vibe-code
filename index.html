@@ -1416,8 +1416,7 @@ function switchSection(name) {
   else if (name==='match') renderMatchPrep();
 
   // Fix lineup layout
-  if (name==='lineup') {
-    secEl.style.cssText='display:flex;gap:0;height:calc(100vh - 100px);position:relative;';
+  if (name==='lineup')
     secEl.classList.add('active');
     renderPitch(); renderPlayerPool();
   }
