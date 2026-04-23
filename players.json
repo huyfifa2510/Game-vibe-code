@@ -2,21 +2,21 @@
   "players": [
     {
       "id": "p001",
-      "name": "Harry Maguire",
+     "name": "Que Ngoc Hai",
       "teamId": "team_1",
       "position": "CB",
       "number": 6,
-      "age": 30,
-      "ovr": 81,
-      "pace": 75,
-      "shooting": 42,
-      "passing": 74,
-      "dribbling": 65,
-      "defense": 88,
-      "physical": 84,
+      "age": 32,
+      "ovr": 70,
+      "pace": 65,
+      "shooting": 32,
+      "passing": 70,
+      "dribbling": 45,
+      "defense": 68,
+      "physical": 70,
       "workRate": "H/M",
-      "nationality": "England",
-      "salary": 5000000,
+      "nationality": "Vietnam",
+      "salary": 50000,
       "contract": 4
     },
     {
@@ -646,24 +646,6 @@
       "salary": 4500000,
       "contract": 1
     }
-    {
-    "id": "p035",
-      "name": "Que Ngoc Hai",
-      "teamId": "team_1",
-      "position": "CB",
-      "number": 6,
-      "age": 32,
-      "ovr": 70,
-      "pace": 65,
-      "shooting": 32,
-      "passing": 70,
-      "dribbling": 45,
-      "defense": 68,
-      "physical": 70,
-      "workRate": "H/M",
-      "nationality": "Vietnam",
-      "salary": 50000,
-      "contract": 4
-    }
+    
   ]
 }
